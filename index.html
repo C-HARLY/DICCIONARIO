@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的英语单词本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#eadfcb;
+  --paper:#fffdf6;
+  --line:#cfe0f3;
+  --margin:#f2a5a5;
+  --ink:#1d3c8f;
+  --red:#c2410c;
+  --pencil:#4a4a4a;
+  --hand:"Patrick Hand","Caveat","Comic Sans MS","Chalkboard SE",cursive;
+  --kai:"KaiTi","STKaiti","Kaiti SC","楷体","楷体_GB2312",serif;
+  --lh:32px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--desk);
+  background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);
+  background-size:6px 6px;
+  font-family:var(--kai);
+  color:var(--pencil);
+}
+.notebook{
+  position:relative;
+  max-width:1040px;
+  margin:28px auto 40px;
+  background:var(--paper);
+  border-radius:6px 16px 16px 6px;
+  box-shadow:0 1px 0 #e6dccb,0 3px 0 #f3ecdf,0 5px 0 #e6dccb,0 14px 30px rgba(80,60,30,.22);
+  padding:36px 34px 40px 104px;
+  overflow:hidden;
+}
+/* 红色页边线 */
+.notebook::before{
+  content:"";position:absolute;top:0;bottom:0;left:82px;width:2px;background:var(--margin);
+}
+/* 活页孔 */
+.notebook::after{
+  content:"";position:absolute;top:0;bottom:0;left:22px;width:34px;
+  background:radial-gradient(circle at 17px 24px,var(--desk) 8px,#d8cbb3 9px,transparent 10px) repeat-y;
+  background-size:34px 56px;
+}
+/* 装饰：樱花与蝴蝶 */
+.doodle{position:absolute;pointer-events:none;opacity:.55}
+.d1{top:18px;right:26px;width:86px}
+.d2{top:150px;right:120px;width:46px;opacity:.4;transform:rotate(-18deg)}
+.d3{bottom:30px;right:40px;width:70px;transform:rotate(12deg)}
+
+header{position:relative;z-index:1;margin-bottom:10px}
+.label{
+  display:inline-block;background:#fff;border:2px solid #333;border-radius:10px;
+  padding:10px 22px 6px;transform:rotate(-1.2deg);box-shadow:3px 3px 0 #333;
+}
+h1{margin:0;font-family:var(--kai);font-size:2rem;color:#222;letter-spacing:2px}
+h1 small{display:block;font-family:var(--hand);font-size:1.2rem;color:var(--ink);letter-spacing:0;margin-top:2px}
+.sub{font-family:var(--kai);margin:14px 0 0;font-size:1.05rem;color:#777}
+
+/* 搜索 */
+.search-wrap{position:relative;z-index:1;margin:22px 0 16px;max-width:520px}
+.search{
+  width:100%;border:0;border-bottom:2px dashed #9bb3d6;background:transparent;
+  font-family:var(--kai);font-size:1.15rem;padding:8px 4px 6px 34px;color:var(--ink);outline:none;
+}
+.search::placeholder{color:#9aa7bb}
+.search-wrap::before{content:"✎";position:absolute;left:4px;top:6px;font-size:1.3rem;color:#9bb3d6}
+
+/* 分类标签（便利贴） */
+.tabs{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.tab{
+  border:0;cursor:pointer;font-family:var(--kai);font-size:1.02rem;color:#333;
+  padding:7px 14px 6px;border-radius:3px;box-shadow:1px 2px 0 rgba(0,0,0,.15);
+  transition:transform .15s, box-shadow .15s;
+}
+.tab:nth-child(odd){transform:rotate(-1.5deg)}
+.tab:nth-child(even){transform:rotate(1.2deg)}
+.tab:hover{transform:translateY(-2px) rotate(0)}
+.tab.on{transform:translateY(-4px) rotate(0) scale(1.05);box-shadow:2px 5px 0 rgba(0,0,0,.22);outline:2px solid #333}
+.tab .n{font-family:var(--hand);font-size:.95rem;opacity:.7;margin-left:4px}
+
+.filters2{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:-6px 0 20px}
+.flabel{font-family:var(--kai);color:#888;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px dashed #9bb3d6;background:transparent;border-radius:999px;padding:2px 12px;cursor:pointer;font-family:var(--kai);font-size:.95rem;color:#5a6a85}
+.chip.on{background:var(--ink);color:#fff;border-style:solid;border-color:var(--ink)}
+.srcsel{font-family:var(--kai);font-size:.98rem;color:var(--ink);background:transparent;border:0;border-bottom:2px dashed #9bb3d6;padding:4px 2px;max-width:100%;outline:none}
+.src{font-family:var(--kai);font-size:.82rem;color:#a6a6a6}
+.count{position:relative;z-index:1;font-family:var(--hand);font-size:1.2rem;color:var(--red);margin:0 0 4px}
+
+/* 横线纸上的单词 */
+.entries{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(2,1fr);column-gap:40px;row-gap:var(--lh);
+  background-image:repeating-linear-gradient(transparent 0 calc(var(--lh) - 1px),var(--line) calc(var(--lh) - 1px) var(--lh));
+  background-position:0 0;
+  padding-top:0;
+  line-height:var(--lh);
+}
+.entry{line-height:var(--lh)}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;height:var(--lh);overflow:visible}
+.en{
+  font-family:var(--hand);font-size:1.65rem;color:var(--ink);
+  background:linear-gradient(transparent 58%,rgba(255,236,90,.75) 58%);
+  padding:0 3px;line-height:var(--lh);
+}
+.pos{font-family:var(--hand);font-size:1.05rem;color:#888}
+.say{
+  border:0;background:transparent;cursor:pointer;font-size:1rem;line-height:1;padding:2px;
+  opacity:.65;
+}
+.say:hover{opacity:1}
+.tag{
+  margin-left:auto;font-family:var(--kai);font-size:.85rem;line-height:1.4;padding:1px 8px;border-radius:2px;
+  color:#333;opacity:.9;transform:rotate(2deg);
+}
+.zh{font-family:var(--kai);font-size:1.3rem;color:var(--red);font-weight:bold}
+.def{font-family:var(--kai);font-size:1.08rem;color:#333}
+.ex{font-family:var(--hand);font-size:1.12rem;color:#5a6a85}
+.ex .exzh{font-family:var(--kai);font-size:1rem;color:#888}
+.empty{grid-column:1/-1;font-family:var(--kai);font-size:1.2rem;color:#999;text-align:center}
+
+footer{position:relative;z-index:1;margin-top:40px;text-align:right;font-family:var(--kai);color:#999;font-size:.95rem}
+
+@media (max-width:720px){
+  .notebook{padding:26px 16px 30px 62px;margin:12px 8px 30px}
+  .notebook::before{left:48px}
+  .notebook::after{left:8px;width:30px;background-size:30px 50px;
+    background-image:radial-gradient(circle at 14px 22px,var(--desk) 7px,#d8cbb3 8px,transparent 9px)}
+  .entries{grid-template-columns:1fr}
+  h1{font-size:1.6rem}
+  .d1{width:60px;right:12px}
+  .d2{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="notebook">
+
+  <!-- 樱花 -->
+  <svg class="doodle d1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#ffc8dd" stroke="#e58aa9" stroke-width="2">
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(72 50 50)"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(144 50 50)"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(216 50 50)"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(288 50 50)"/>
+    </g>
+    <circle cx="50" cy="50" r="6" fill="#f7a1c0"/>
+  </svg>
+  <!-- 蝴蝶 -->
+  <svg class="doodle d2" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#7c5cff" stroke-width="2.5" fill="#e4dcff">
+      <path d="M50 40 C30 5 5 10 10 30 C14 45 35 45 50 40Z"/>
+      <path d="M50 40 C70 5 95 10 90 30 C86 45 65 45 50 40Z"/>
+      <path d="M50 42 C35 50 22 72 36 72 C46 72 50 55 50 42Z"/>
+      <path d="M50 42 C65 50 78 72 64 72 C54 72 50 55 50 42Z"/>
+    </g>
+    <line x1="50" y1="30" x2="50" y2="62" stroke="#444" stroke-width="3" stroke-linecap="round"/>
+    <path d="M50 30 C46 20 42 16 38 14 M50 30 C54 20 58 16 62 14" stroke="#444" stroke-width="2" fill="none"/>
+  </svg>
+  <svg class="doodle d3" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#ffd6e5" stroke="#e58aa9" stroke-width="2">
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(72 50 50)"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(144 50 50)"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(216 50 50)"/>
+      <path d="M50 50 C38 30 42 12 50 8 C58 12 62 30 50 50Z" transform="rotate(288 50 50)"/>
+    </g>
+    <circle cx="50" cy="50" r="6" fill="#f7a1c0"/>
+  </svg>
+
+  <header>
+    <div class="label">
+      <h1>我的英语单词本<small>My English Notebook</small></h1>
+    </div>
+    <p class="sub">一页一页，慢慢积累 🌸 按主题、词性或来源查找，点 🔊 可以听发音</p>
+  </header>
+
+  <div class="search-wrap">
+    <input class="search" id="search" type="search" placeholder="搜索单词或中文…… 例如：钱包 / wallet">
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="filters2">
+    <span class="flabel">词性：</span><div class="chips" id="chips"></div>
+    <span class="flabel">来源：</span><select class="srcsel" id="srcsel"></select>
+  </div>
+
+  <p class="count" id="count"></p>
+  <div class="entries" id="entries"></div>
+
+  <footer>🦋 继续加油，每天进步一点点</footer>
+</div>
+
+<script>
+const CATS = {
+  "商业":{icon:"💼",color:"#ffd6a5"},
+  "环境":{icon:"🌍",color:"#caffbf"},
+  "健康医学":{icon:"🩺",color:"#ffadad"},
+  "科学":{icon:"🔬",color:"#d0f4de"},
+  "科技交通":{icon:"🚗",color:"#bde0fe"},
+  "建筑城市":{icon:"🏙️",color:"#dcd3ff"},
+  "历史文化":{icon:"🏛️",color:"#fdffb6"},
+  "情绪性格":{icon:"💗",color:"#ffc6ff"},
+  "学术常用":{icon:"📚",color:"#a0c4ff"},
+  "表达":{icon:"💬",color:"#b9fbc0"},
+  "日常":{icon:"🗓️",color:"#fbe0c3"},
+  "食物":{icon:"🍜",color:"#ffe5b4"},
+  "物品":{icon:"🎒",color:"#cde7f0"},
+  "地点":{icon:"🏫",color:"#f1e3d3"}
+};
+const SOURCES = {
+  A:"单词本 · 创业",
+  B:"雅思 p154 · Streets Ahead",
+  C:"雅思 p126 · Building up Steam in China",
+  D:"单词本 · 情绪与交流",
+  E:"Science news · 睡眠与心脏",
+  F:"新闻1 · 关节炎试验",
+  G:"雅思 p171 · 王室与法老",
+  H:"Science news · RNA 存档",
+  I:"读后续写 · Lily 与钱包",
+  J:"常用词"
+};
+const POS = ["全部","名词","动词","形容词","副词","短语"];
+function posGroups(p){
+  return p.split("/").map(t => {
+    t = t.trim();
+    if (t === "n.") return "名词";
+    if (t === "v.") return "动词";
+    if (t === "adj.") return "形容词";
+    if (t === "adv.") return "副词";
+    return "短语";
+  });
+}
+
+/* 每行：英文|词性|中文|中文解释|英文例句|例句翻译|主题|来源 */
+const RAW = `entrepreneur|n.|企业家；创业者|自己创办并经营公司的人。|She wants to become an entrepreneur.|她想成为一名创业者。|商业|A
+entrepreneurialism|n.|创业精神|敢于创业、愿意冒险的精神。|The city encourages entrepreneurialism.|这座城市鼓励创业精神。|商业|A
+depth|n.|深度|某物有多深，或理解有多深入。|The article lacks depth.|这篇文章缺乏深度。|学术常用|A
+corporation|n.|大公司；企业|规模很大的公司。|He works for a big corporation.|他在一家大公司工作。|商业|A
+corporate|adj.|公司的；企业的|和大公司有关的。|He left the corporate world.|他离开了企业界。|商业|A
+concept|n.|概念；观念|对某事物的基本想法。|The concept is easy to understand.|这个概念很容易理解。|学术常用|A
+genius|n.|天才|非常聪明、有特殊才能的人。|Einstein was a genius.|爱因斯坦是个天才。|情绪性格|A
+business-minded|adj.|有商业头脑的|善于发现商机、懂得赚钱。|She is very business-minded.|她很有商业头脑。|情绪性格|A
+ladder|n.|梯子；（事业的）阶梯|也比喻在公司里一步步往上升职。|He climbed the corporate ladder.|他在公司里一步步升职。|商业|A
+risky (riskier)|adj.|有风险的（更冒险的）|可能失败或带来损失。|Starting a business is riskier.|创业的风险更大。|商业|A
+risk|n.|风险|可能发生不好的事情的机会。|Every business has some risk.|每个生意都有风险。|商业|A
+lucrative|adj.|赚钱的；利润丰厚的|能带来很多钱的。|It is a lucrative job.|这是一份很赚钱的工作。|商业|A
+chain|n.|连锁店；链条|同一个品牌开的很多家店。|Starbucks is a coffee chain.|星巴克是一家咖啡连锁店。|商业|A
+combined|adj.|联合的；合计的|几样东西加在一起的。|Their combined income is high.|他们的总收入很高。|学术常用|A
+media|n.|媒体|电视、报纸、网络等传播信息的方式。|The media reported the news.|媒体报道了这条新闻。|日常|A
+budding|adj.|新兴的；初露头角的|刚开始发展、很有潜力的。|He is a budding entrepreneur.|他是一位新晋创业者。|商业|A
+conduct|v.|进行；实施|组织并完成某项工作，比如调查。|They conducted a survey.|他们进行了一项调查。|学术常用|A
+male|adj./n.|男性的；男性|和男人有关的。|Most of the founders are male.|大多数创始人是男性。|日常|A
+academic|adj.|学术的；学业的|和学习、学校有关的。|She has good academic results.|她的学业成绩很好。|学术常用|A
+qualification|n.|资格；学历|证明你有能力做某事的证书或经历。|You need a teaching qualification.|你需要教师资格证。|学术常用|A
+trait|n.|特征；特点|一个人性格中的某种特点。|Patience is a good trait.|耐心是一种好品质。|情绪性格|A
+secret|n.|秘密；秘诀|不让别人知道的事，也指成功的方法。|What is the secret of success?|成功的秘诀是什么？|日常|A
+list|n./v.|清单；列出|一项一项写下来的内容。|Make a shopping list.|列一张购物清单。|日常|A
+beer mat|n.|啤酒杯垫|放在啤酒杯下面的小纸垫。|He wrote his idea on a beer mat.|他把想法写在了啤酒杯垫上。|物品|A
+idiot-proof|adj.|傻瓜式的；极简单的|简单到谁都不会用错。|The plan is idiot-proof.|这个计划简单到不会出错。|表达|A
+roadworthy|adj.|（车辆）适合上路的|车况良好，可以安全行驶。|Is the car roadworthy?|这辆车适合上路吗？|科技交通|A
+aircraft|n.|飞机；航空器|能在空中飞行的交通工具。|The aircraft landed safely.|飞机安全降落了。|科技交通|A
+tattoo|n.|文身|在皮肤上刺的图案。|He has a tattoo on his arm.|他手臂上有文身。|日常|A
+frequency|n.|频率|某事发生的次数多少。|The frequency of buses has increased.|公交车的班次变多了。|学术常用|A
+identification|n.|身份证明；识别|证明你是谁的东西，或认出某物的过程。|Please show your identification.|请出示身份证明。|日常|A
+tag|n./v.|标签；给……加标签|挂在物品上的小牌子，也指给动物做标记。|Farmers tag cattle with numbers.|农民给牛挂上编号标签。|物品|A
+cattle|n.|牛（总称）|农场里养的牛。|The farm has 100 cattle.|农场有一百头牛。|日常|A
+likelihood|n.|可能性|某事发生的机会有多大。|There is a high likelihood of rain.|下雨的可能性很大。|学术常用|A
+embrace|v.|拥抱；欣然接受|愿意接受新的想法或变化。|She embraced the new idea.|她欣然接受了新想法。|学术常用|A
+breed|n./v.|品种；繁殖|动物的种类，或让动物繁殖。|What breed is your dog?|你的狗是什么品种？|日常|A
+rate|n.|比率；速度|某事发生的快慢或比例。|The success rate is low.|成功率很低。|学术常用|A
+belt|n.|腰带；地带|系在腰上的带子。|Fasten your seat belt.|系好安全带。|物品|A
+venture|n.|冒险事业；风险投资|有风险的新生意或新计划。|It is a new business venture.|这是一项新的商业冒险。|商业|A
+distinguished|adj.|杰出的；著名的|非常成功、受人尊敬的。|He is a distinguished scientist.|他是一位杰出的科学家。|情绪性格|A
+foolish|adj.|愚蠢的|不明智、做得很傻的。|It was a foolish decision.|那是个愚蠢的决定。|情绪性格|A
+calculated|adj.|经过计算的；深思熟虑的|事先仔细考虑过的。|He took a calculated risk.|他冒了一个经过权衡的风险。|商业|A
+hottest|adj.|最热门的；最热的|hot 的最高级，也指最受欢迎。|It is the hottest new app.|这是最热门的新应用。|日常|A
+funding|n.|资金；拨款|为某个项目提供的钱。|The project needs more funding.|这个项目需要更多资金。|商业|A
+varied|adj.|各种各样的|有很多不同种类的。|Her interests are varied.|她的兴趣很广泛。|学术常用|A
+biotechnology|n.|生物技术|利用生物来开发产品的技术。|He works in biotechnology.|他从事生物技术工作。|科学|A
+nanotechnology|n.|纳米技术|在极小的尺度上操控物质的技术。|Nanotechnology is used in medicine.|纳米技术被用于医学。|科学|A
+pop up|短语|突然出现|意外地、很快地出现。|New shops pop up everywhere.|新商店到处冒出来。|表达|A
+gas-powered|adj.|汽油驱动的|用汽油作为动力的。|Most cars are gas-powered.|大多数汽车是汽油驱动的。|科技交通|B
+hybrid|n./adj.|混合动力车；混合的|同时用汽油和电的汽车。|She drives a hybrid.|她开混合动力车。|科技交通|B
+readily available|短语|容易获得的|很容易买到或找到。|Hybrids are readily available now.|现在很容易买到混动车。|表达|B
+fuel efficient|adj.|省油的|用比较少的燃料跑比较远的路。|This car is fuel efficient.|这辆车很省油。|科技交通|B
+second-hand|adj.|二手的|别人用过之后再卖的。|I bought a second-hand car.|我买了一辆二手车。|日常|B
+repair|n./v.|修理|把坏的东西修好。|The repairs are costly.|修理费很贵。|日常|B
+costly|adj.|昂贵的；代价高的|要花很多钱的。|It was a costly mistake.|那是个代价高昂的错误。|商业|B
+leak|v./n.|泄漏|液体或气体从小洞里流出来。|The car leaks oil.|这辆车漏油。|科技交通|B
+globe|n.|地球；全球|指整个世界。|They travel across the globe.|他们周游世界。|环境|B
+cause|v.|导致；引起|让某事发生。|Cars cause pollution.|汽车导致污染。|学术常用|B
+destruction|n.|破坏；毁灭|非常严重的毁坏。|The destruction of forests is serious.|森林破坏很严重。|环境|B
+ecosystem|n.|生态系统|生物和环境组成的整体。|Pollution harms the ecosystem.|污染破坏生态系统。|环境|B
+massive|adj.|巨大的|非常大、非常多的。|It caused massive damage.|它造成了巨大的破坏。|学术常用|B
+scale|n.|规模|事情的大小或范围。|It happened on a massive scale.|这件事的规模很大。|学术常用|B
+adverse|adj.|不利的；有害的|带来坏影响的。|It has an adverse effect on health.|它对健康有不利影响。|学术常用|B
+conscious|adj.|有意识的；注重……的|关心并且注意某事的。|She is environmentally conscious.|她很有环保意识。|环境|B
+consumer|n.|消费者|购买商品或服务的人。|Consumers want cheaper cars.|消费者想要更便宜的车。|商业|B
+dramatically|adv.|显著地；大幅地|变化非常大地。|Prices rose dramatically.|价格大幅上涨。|学术常用|B
+manufacture|v.|制造；生产|在工厂里大量生产。|The cars were manufactured in Japan.|这些车是在日本制造的。|商业|B
+equal|adj.|相等的|数量、大小一样的。|They were made in equal numbers.|它们的产量相同。|学术常用|B
+advent|n.|出现；到来|重要事物的出现。|Life changed with the advent of the internet.|互联网的出现改变了生活。|学术常用|B
+devastation|n.|毁坏；破坏|极其严重的破坏。|The storm left devastation.|暴风雨造成了严重破坏。|环境|B
+emission|n.|排放；排放物|排放到空气中的气体等。|Cars produce CO2 emissions.|汽车产生二氧化碳排放。|环境|B
+carbon dioxide|n.|二氧化碳|一种会让地球变暖的气体（CO₂）。|Trees absorb carbon dioxide.|树木吸收二氧化碳。|环境|B
+air-polluting|adj.|污染空气的|会让空气变脏的。|Driving is an air-polluting activity.|开车是一种污染空气的活动。|环境|B
+noise pollution|n.|噪音污染|太多噪音对人造成的影响。|Noise pollution causes stress.|噪音污染会带来压力。|环境|B
+accrue|v.|累积；产生|随着时间慢慢增加。|Costs accrue every year.|费用每年都在累积。|商业|B
+acute|adj.|急性的；严重的|突然发生、很严重的（疾病）。|He has acute pain.|他有急性疼痛。|健康医学|B
+respiratory|adj.|呼吸的|和呼吸系统有关的。|She has respiratory problems.|她有呼吸方面的问题。|健康医学|B
+asthma|n.|哮喘|让人呼吸困难的一种疾病。|Pollution can cause asthma.|污染会引发哮喘。|健康医学|B
+health care costs|n.|医疗费用|看病、治疗所花的钱。|Health care costs are rising.|医疗费用在上涨。|健康医学|B
+fluid|n.|液体|能流动的物质。|Drink plenty of fluids.|多喝水。|科学|B
+chemical|n.|化学物质|化学反应产生或使用的物质。|Chemicals enter the rivers.|化学物质流入河流。|科学|B
+stereo|n.|立体声音响|播放音乐的设备。|Turn down the stereo.|把音响调小一点。|物品|B
+deprivation|n.|剥夺；缺乏|失去或得不到需要的东西。|Sleep deprivation is bad for you.|睡眠不足对你有害。|健康医学|B
+stockpile|v.|储备；囤积|大量储存起来。|People stockpiled food.|人们囤积了食物。|学术常用|B
+tyre|n.|轮胎（美式拼写 tire）|车轮外面的橡胶圈。|I need a new tyre.|我需要一个新轮胎。|科技交通|B
+rubber|n.|橡胶|一种有弹性的材料。|Tyres are made of rubber.|轮胎是橡胶做的。|物品|B
+per|prep.|每|每一个、每一次。|I go there once per week.|我每周去一次。|学术常用|B
+average|adj./n.|平均的；平均数|把总数平均分后的数值。|The average price is 20 dollars.|平均价格是二十美元。|学术常用|B
+as a result|短语|结果；因此|表示由前面的原因带来的结果。|As a result, crops lose their yield.|结果，农作物减产了。|表达|B
+quantity|n.|数量|东西的多少。|Eat sugar in small quantities.|糖要少量吃。|学术常用|B
+yield|n./v.|产量；产出|农作物等生产出来的数量。|Pollution reduces crop yield.|污染降低农作物产量。|环境|B
+allocate|v.|分配；拨出|把资源分给某个用途。|They allocated money to roads.|他们拨款修路。|商业|B
+maintain|v.|维护；保持|让东西保持良好状态。|The government maintains the roads.|政府负责维护道路。|学术常用|B
+forefront|n.|最前沿|领先、最重要的位置。|They are at the forefront of technology.|他们处在科技最前沿。|学术常用|B
+silver bullet|n.|灵丹妙药；万能办法|能一下子解决难题的方法（常用于否定）。|There is no silver bullet.|没有万能的解决办法。|表达|B
+definition|n.|定义|对词语意思的解释。|What is the definition of this word?|这个词的定义是什么？|学术常用|B
+combine|v.|结合；组合|把两样或几样放在一起。|A hybrid combines gas and electricity.|混动车结合了汽油和电。|学术常用|B
+gasoline|n.|汽油|汽车用的燃料。|Gasoline prices went up.|汽油价格上涨了。|科技交通|B
+parallel|adj./n.|平行的；并联的|方向相同、永不相交的。|The two roads run parallel.|这两条路平行延伸。|学术常用|B
+fuel tank|n.|油箱|车上装汽油的箱子。|The fuel tank is empty.|油箱空了。|科技交通|B
+propel|v.|推动；推进|让东西向前移动。|The engine propels the car.|发动机推动汽车前进。|科技交通|B
+motor|n.|电动机；马达|让机器运转的装置。|The motor is very quiet.|马达很安静。|科技交通|B
+generator|n.|发电机|产生电的机器。|The generator charges the battery.|发电机给电池充电。|科技交通|B
+battery|n.|电池|储存电的装置。|My phone battery is low.|我手机快没电了。|物品|B
+plug-in|adj.|插电式的|可以插上电源充电的。|It is a plug-in hybrid.|这是插电式混动车。|科技交通|B
+option|n.|选择；选项|可以选的一种可能。|You have two options.|你有两个选择。|日常|B
+maximise|v.|使最大化（美式 maximize）|让某样东西达到最大。|We want to maximise profit.|我们想让利润最大化。|商业|B
+previously|adv.|以前；先前|在现在之前。|I had previously lived in Paris.|我以前住在巴黎。|学术常用|B
+ignition|n.|点火；点火装置|让汽车发动机启动的部分。|Turn the key in the ignition.|转动点火钥匙。|科技交通|B
+dormant|adj.|休眠的；暂停的|暂时不活动的。|The volcano is dormant.|这座火山在休眠。|学术常用|B
+minimal|adj.|极少的；最低的|非常少的。|The cost is minimal.|费用极低。|学术常用|B
+reliance|n.|依赖|需要依靠某人或某物。|We need less reliance on oil.|我们需要减少对石油的依赖。|学术常用|B
+aerodynamic|adj.|空气动力学的；流线型的|形状能减少空气阻力的。|The car has an aerodynamic design.|这辆车是流线型设计。|科技交通|B
+boost|v./n.|提高；促进|让某事增加或变好。|Coffee boosts my energy.|咖啡让我精力充沛。|学术常用|B
+reduction|n.|减少|数量变少。|We saw a reduction in costs.|我们看到成本减少了。|学术常用|B
+drone|n.|无人机|不需要人驾驶的小型飞行器。|He flies a drone.|他在放无人机。|科技交通|B
+roar|n./v.|轰鸣；吼叫|很大、很低沉的声音。|I heard the roar of the engine.|我听见发动机的轰鸣声。|科技交通|B
+scaling|n.|扩大规模；缩放|按比例扩大或缩小。|Scaling up production is hard.|扩大生产很难。|商业|B
+blasting tunes|短语|大声放音乐|把音乐开得很大声。|He was blasting tunes in his car.|他在车里大声放音乐。|表达|B
+manufacturer|n.|制造商|生产商品的公司。|Toyota is a car manufacturer.|丰田是一家汽车制造商。|商业|B
+warranty|n.|保修；保修单|东西坏了可以免费修的保证。|The car has a five-year warranty.|这辆车有五年保修。|商业|B
+tax incentive|n.|税收优惠|政府用减税来鼓励某种行为。|There are tax incentives for hybrids.|买混动车有税收优惠。|商业|B
+incentive|n.|激励；奖励|鼓励人去做某事的东西。|Money is a strong incentive.|钱是很强的激励。|商业|B
+resale|n.|转卖；再出售|把买过的东西再卖出去。|It has a high resale value.|它的转卖价值很高。|商业|B
+spacious|adj.|宽敞的|空间很大的。|The car is very spacious.|这辆车很宽敞。|日常|B
+purchase|v./n.|购买|买东西（比 buy 更正式）。|She purchased a new car.|她买了一辆新车。|商业|B
+investment|n.|投资|为了将来赚钱而投入的钱。|A house is a good investment.|房子是不错的投资。|商业|B
+contrary to popular belief|短语|与大众看法相反|用来引出和一般人想法不同的事实。|Contrary to popular belief, hybrids are not new.|与大众看法相反，混动车并不是新技术。|表达|B
+roll up|短语|摇起；卷起|把车窗往上摇，或把东西卷起来。|Roll up the window.|把车窗摇上去。|表达|B
+fragile|adj.|易碎的；脆弱的|很容易坏的。|The glass is fragile.|玻璃很易碎。|学术常用|B
+affordable|adj.|买得起的；价格合理的|价钱不太贵的。|Hybrids are now more affordable.|混动车现在更便宜了。|商业|B
+purse|n.|（女式）钱包|女士装钱的小包。|She opened her purse.|她打开了钱包。|物品|B
+populous|adj.|人口众多的|住着很多人的。|China is a populous country.|中国是人口大国。|建筑城市|C
+migration|n.|迁移；移居|人从一个地方搬到另一个地方。|Mass migration changed the cities.|大规模迁移改变了城市。|建筑城市|C
+immigration|n.|（外来）移民|从别的国家搬来定居。|Immigration laws are strict.|移民法很严格。|建筑城市|C
+rural|adj.|农村的|和乡下有关的。|He grew up in a rural area.|他在农村长大。|建筑城市|C
+urban|adj.|城市的|和城市有关的。|Urban life is busy.|城市生活很忙碌。|建筑城市|C
+megalopolis|n.|特大城市（群）|由几个大城市连成的超大城市区。|Shanghai is a megalopolis.|上海是一座特大城市。|建筑城市|C
+unprecedented|adj.|前所未有的|以前从来没发生过的。|The growth is unprecedented.|这种增长前所未有。|学术常用|C
+driving force|n.|推动力|让事情发展的主要原因。|Migration is the driving force.|迁移是主要的推动力。|表达|C
+tip|v.|使倾斜；改变（局面）|让情况向某一边倾斜。|This will tip the balance.|这会打破平衡。|表达|C
+demographics|n.|人口结构；人口统计|一个地区人口的组成情况。|The city's demographics are changing.|城市的人口结构在变化。|建筑城市|C
+distribution|n.|分布；分配|东西分散在各地的情况。|Look at the population distribution.|看看人口分布。|学术常用|C
+high-rise|adj./n.|高层的；高楼|有很多层的建筑。|They live in a high-rise apartment.|他们住在高层公寓里。|建筑城市|C
+shift|n./v.|转变；转移|位置或方向的改变。|There is a shift to city life.|人们正转向城市生活。|学术常用|C
+stimulus|n.|刺激；促进因素|促使某事发生的东西。|It was the prime stimulus for growth.|这是增长的主要动力。|学术常用|C
+construction boom|n.|建筑热潮|短时间内大量建房子。|China has a construction boom.|中国正经历建筑热潮。|建筑城市|C
+architectural|adj.|建筑的|和建筑设计有关的。|It is an architectural firm.|这是一家建筑事务所。|建筑城市|C
+firm|n.|公司；事务所|一家企业。|She works at a law firm.|她在律师事务所工作。|商业|C
+prior to|prep.|在……之前|比某个时间更早。|Prior to 2000, there were no private firms.|2000 年以前没有私人公司。|表达|C
+skyscraper|n.|摩天大楼|非常高的大楼。|Shanghai has many skyscrapers.|上海有很多摩天大楼。|建筑城市|C
+drawing board|n.|绘图板；（计划的）设计阶段|on the drawing board 指还在计划中。|The project is still on the drawing board.|这个项目还在规划中。|表达|C
+consume|v.|消耗；消费|用掉资源、能源等。|China consumes half the world's concrete.|中国消耗全球一半的混凝土。|学术常用|C
+concrete|n.|混凝土|盖房子用的建筑材料。|The building is made of concrete.|这座楼是混凝土建的。|建筑城市|C
+steel|n.|钢|很坚固的金属材料。|The bridge is made of steel.|这座桥是钢做的。|建筑城市|C
+iron ore|n.|铁矿石|用来炼铁的矿石。|Australia exports iron ore.|澳大利亚出口铁矿石。|商业|C
+miniature|adj.|微型的；小型的|比正常小很多的。|They build miniature cities.|他们建了一些小型城市。|学术常用|C
+artificial|adj.|人造的|人做出来的，不是天然的。|The park has an artificial lake.|公园里有个人工湖。|学术常用|C
+hire|v.|雇用|请人来为你工作。|They hired famous architects.|他们雇了著名建筑师。|商业|C
+innovative|adj.|创新的|有新想法、新方法的。|It is an innovative design.|这是一个创新的设计。|学术常用|C
+stand out|短语|突出；显眼|比别的更引人注意。|Her work stands out.|她的作品很突出。|表达|C
+approval|n.|批准；赞同|官方同意某事。|They need government approval.|他们需要政府批准。|商业|C
+building code|n.|建筑规范|盖房子必须遵守的规定。|It must pass the building codes.|它必须符合建筑规范。|建筑城市|C
+apex|n.|顶点；顶端|最高的那一点。|There is a window at the apex.|顶端有一扇窗。|建筑城市|C
+marvel|n.|奇迹；了不起的东西|令人惊叹的东西。|The building is an architectural marvel.|这座楼是建筑奇迹。|建筑城市|C
+withstand|v.|承受；抵挡|经得住压力或冲击。|It can withstand high winds.|它能抵挡强风。|建筑城市|C
+accommodate|v.|容纳；提供住处|有足够的空间放下。|The hotel accommodates 500 guests.|这家酒店能容纳 500 位客人。|建筑城市|C
+observation deck|n.|观景台|高楼上用来看风景的平台。|We went up to the observation deck.|我们上了观景台。|地点|C
+ventilation|n.|通风|让新鲜空气进来。|The room needs ventilation.|这个房间需要通风。|建筑城市|C
+shelter|n./v.|庇护；遮挡|保护人不受风雨伤害。|They found shelter from the rain.|他们找到地方躲雨。|日常|C
+filter|v./n.|过滤；过滤器|去掉液体或空气中的杂质。|The water is filtered.|水经过了过滤。|环境|C
+subterranean|adj.|地下的|在地面以下的。|Rainwater is stored in subterranean tanks.|雨水储存在地下水箱里。|建筑城市|C
+eco-friendly|adj.|环保的|对环境没有伤害的。|Use eco-friendly bags.|请使用环保袋。|环境|C
+sustainable|adj.|可持续的|长期使用也不会破坏环境的。|We need sustainable energy.|我们需要可持续能源。|环境|C
+roughly|adv.|大约|差不多、不精确地。|It is roughly three times bigger.|它大约大三倍。|学术常用|C
+waste management|n.|废物管理|处理垃圾的方法和系统。|The city improved waste management.|城市改善了垃圾处理。|环境|C
+purification|n.|净化|让水或空气变干净。|They built a water purification system.|他们建了一套净水系统。|环境|C
+geothermal|adj.|地热的|利用地下热量的。|Geothermal energy is clean.|地热能很清洁。|环境|C
+amenities|n.|便利设施|让生活方便的设施，比如商店、公园。|The area has good amenities.|这个地区设施齐全。|建筑城市|C
+astronomical|adj.|天文数字的；极高的|价格或数量非常非常大。|The prices are astronomical.|价格高得惊人。|商业|C
+real estate|n.|房地产|房子和土地的买卖。|He invests in real estate.|他投资房地产。|商业|C
+invest|v.|投资|投入钱，希望以后赚钱。|They invested 700 million dollars.|他们投资了七亿美元。|商业|C
+demolish|v.|拆除；摧毁|把建筑拆掉。|The old houses were demolished.|老房子被拆了。|建筑城市|C
+relocation|n.|搬迁；迁移|搬到新的地方。|The relocation of residents was hard.|居民搬迁很困难。|建筑城市|C
+civilian|n.|平民；普通百姓|不是军人或官员的普通人。|Millions of civilians moved.|数百万平民搬了家。|日常|C
+greenhouse gas|n.|温室气体|让地球变暖的气体。|Cars produce greenhouse gases.|汽车产生温室气体。|环境|C
+bubble|n.|泡沫；（经济）泡沫|价格虚高，可能会突然崩溃。|The real estate bubble may burst.|房地产泡沫可能会破裂。|商业|C
+burst|v.|破裂；爆裂|突然裂开。|The balloon burst.|气球爆了。|学术常用|C
+devastating|adj.|毁灭性的|造成极大破坏的。|It had devastating effects.|它造成了毁灭性的影响。|学术常用|C
+prominent|adj.|著名的；重要的|很有名、很重要的。|He is a prominent architect.|他是一位著名建筑师。|学术常用|C
+superstructure|n.|超级建筑；上层建筑|非常巨大的建筑。|These superstructures are impressive.|这些超级建筑令人印象深刻。|建筑城市|C
+civic|adj.|城市的；市民的|和城市、市民有关的。|Civic pride is important.|市民的自豪感很重要。|建筑城市|C
+significance|n.|意义；重要性|某事有多重要。|The building has little significance.|这座建筑没什么意义。|学术常用|C
+ceiling|n.|天花板|房间上方的那一面。|The ceiling is very high.|天花板很高。|日常|D
+perceive|v.|察觉；感知|注意到或理解某事。|I perceived a change in her voice.|我察觉到她声音的变化。|学术常用|D
+distinguish|v.|区分；辨别|看出两者的不同。|Can you distinguish the twins?|你能分清这对双胞胎吗？|学术常用|D
+anxiety|n.|焦虑|担心、紧张、不安的感觉。|She feels anxiety before exams.|她考试前会焦虑。|情绪性格|D
+chest|n.|胸口；胸部|身体前面、脖子下方的部分。|I feel pain in my chest.|我胸口疼。|健康医学|D
+embarrassed|adj.|尴尬的|在别人面前觉得不好意思。|I felt embarrassed.|我觉得很尴尬。|情绪性格|D
+ashamed|adj.|羞愧的|因为做错事而觉得丢脸。|He is ashamed of his mistake.|他为自己的错误感到羞愧。|情绪性格|D
+merely|adv.|仅仅；只是|只不过，没有更多。|It was merely a joke.|那只是个玩笑。|学术常用|D
+call on|短语|拜访；号召|短暂地去看望某人，或请某人做事。|I called on my grandmother.|我去看望了奶奶。|表达|D
+bother|v.|打扰；费心|麻烦别人，或花力气去做某事。|Sorry to bother you.|抱歉打扰你。|日常|D
+weep|v.|哭泣；流泪|安静地哭。|She wept with joy.|她喜极而泣。|情绪性格|D
+at work|短语|在工作；在上班|正在工作的时候或地方。|He is at work now.|他现在在上班。|表达|D
+conflict|n./v.|冲突|意见不同引起的争执。|They had a conflict at work.|他们在工作中起了冲突。|情绪性格|D
+inquire|v.|询问；打听|比较正式地问问题。|I inquired about the price.|我询问了价格。|日常|D
+ultimately|adv.|最终|到最后。|Ultimately, she made the right choice.|最终，她做了正确的选择。|学术常用|D
+adjust|v.|调整；适应|稍微改变，来适合新情况。|She adjusted to the new city.|她适应了新城市。|学术常用|D
+react|v.|反应|对某事做出回应。|How did he react?|他有什么反应？|情绪性格|D
+component|n.|组成部分；部件|整体中的一部分。|Trust is a key component.|信任是关键的一部分。|学术常用|D
+tone|n.|语气；音调|说话时声音传达的态度。|Don't use that tone with me.|别用那种语气跟我说话。|情绪性格|D
+foretell|v.|预言；预示|提前说出将来会发生的事。|Dreams cannot foretell the future.|梦不能预言未来。|学术常用|E
+stage|n.|阶段|过程中的某一段。|It is still in the early stages.|现在还在早期阶段。|学术常用|E
+undergo|v.|经历；接受|经历某种变化或过程。|He will undergo surgery.|他将接受手术。|健康医学|E
+determine|v.|确定；决定|查明或决定某事。|Tests can determine the risk.|检查可以确定风险。|学术常用|E
+electrocardiogram (ECG)|n.|心电图|记录心脏电活动的检查。|The doctor did an ECG.|医生做了心电图。|健康医学|E
+predict|v.|预测|说出将来可能发生的事。|AI can predict the risk.|人工智能可以预测风险。|学术常用|E
+irregular|adj.|不规则的|不按正常规律的。|He has an irregular heartbeat.|他心跳不规律。|健康医学|E
+potential|n./adj.|潜力；潜在的|将来可能发展出来的能力。|She has great potential.|她很有潜力。|学术常用|E
+cardiovascular|adj.|心血管的|和心脏、血管有关的。|Exercise lowers cardiovascular risk.|运动降低心血管风险。|健康医学|E
+clinical|adj.|临床的|和医生治疗病人有关的。|There are no clinical symptoms yet.|还没有临床症状。|健康医学|E
+symptom|n.|症状|生病时身体出现的迹象。|Fever is a symptom of flu.|发烧是流感的症状。|健康医学|E
+arise|v.|出现；产生|问题或情况开始发生。|Problems may arise.|可能会出现问题。|学术常用|E
+evaluate|v.|评估|判断某事的价值或效果。|We need to evaluate the results.|我们需要评估结果。|学术常用|E
+improve|v.|改善；提高|让某事变得更好。|Her English has improved.|她的英语进步了。|学术常用|E
+enroll|v.|登记；报名参加|正式报名参加某个项目。|Patients enrolled in the study.|病人报名参加了研究。|学术常用|E
+trial|n.|试验|测试新药或新方法的研究。|The trial lasted 48 weeks.|试验持续了 48 周。|健康医学|E
+measure|v.|测量|量出大小、数量等。|They measured her heart rate.|他们测量了她的心率。|学术常用|E
+sort|v.|分类|把东西按类别分开。|The model sorts participants into groups.|模型把参与者分成几组。|学术常用|E
+conventional|adj.|传统的；常规的|一般的、普通的方法。|This is a conventional method.|这是一种传统方法。|学术常用|E
+standard deviation|n.|标准差|统计中表示数据分散程度的数值。|The standard deviation is small.|标准差很小。|科学|E
+fibrillation|n.|（心脏）颤动|心脏不规律地快速跳动。|Atrial fibrillation is common in old people.|房颤在老年人中很常见。|健康医学|E
+stroke|n.|中风|大脑血管出问题导致的疾病。|He had a stroke last year.|他去年中风了。|健康医学|E
+significantly|adv.|显著地|变化明显、很大地。|The risk increased significantly.|风险显著增加了。|学术常用|E
+myocardial infarction|n.|心肌梗死|也就是心脏病发作（heart attack）。|Myocardial infarction is a heart attack.|心肌梗死就是心脏病发作。|健康医学|E
+randomized|adj.|随机的|用随机的方法分组的。|It was a randomized trial.|这是一项随机试验。|科学|F
+double-blind|adj.|双盲的|病人和医生都不知道谁用了真药。|It was a double-blind study.|这是一项双盲研究。|科学|F
+sustained remission|n.|持续缓解|病情长期保持稳定、没有发作。|The patients were in sustained remission.|病人处于持续缓解期。|健康医学|F
+participant|n.|参与者|参加活动或研究的人。|There were 102 participants.|共有 102 名参与者。|学术常用|F
+disability|n.|残疾；功能障碍|身体或心理功能上的限制。|He lives with a disability.|他身有残疾。|健康医学|F
+index|n.|指数；索引|用来衡量或查找的数字或列表。|Check the index at the back of the book.|查一下书后的索引。|学术常用|F
+placebo|n.|安慰剂|没有药效的假药，用于对照试验。|Some patients took a placebo.|一些病人服用了安慰剂。|健康医学|F
+affected|adj.|受影响的|被某事影响的。|Pain was the most affected area.|受影响最大的是疼痛。|学术常用|F
+corresponding|adj.|相应的；对应的|和另一件事相配合或一致的。|Fill in the corresponding box.|填写对应的方框。|学术常用|F
+relapse|n./v.|复发|病情好转后又变坏。|She had a relapse.|她旧病复发了。|健康医学|F
+present|v.|呈现；展示|把东西展示给人看。|The museum presents her life.|博物馆展示了她的一生。|学术常用|G
+evoke|v.|唤起；引起|让人想起某种感觉或记忆。|The song evokes memories.|这首歌唤起了回忆。|学术常用|G
+impression|n.|印象|对人或事的感觉和看法。|She made a good impression.|她给人留下了好印象。|情绪性格|G
+elegance|n.|优雅|美丽而有品味。|She dresses with elegance.|她穿着很优雅。|情绪性格|G
+glamour|n.|魅力；光彩|吸引人的、迷人的美。|She loves the glamour of fashion.|她喜欢时尚的魅力。|情绪性格|G
+classic|adj.|经典的|一直受欢迎、有代表性的。|It is a classic movie.|这是一部经典电影。|历史文化|G
+stunning|adj.|极美的；令人惊叹的|非常漂亮的。|You look stunning!|你看起来美极了！|情绪性格|G
+royalty|n.|王室成员|国王、王后等王室的人。|She was treated like royalty.|她被当作王室成员一样对待。|历史文化|G
+royal|adj.|王室的|和国王、王后有关的。|The royal family lives here.|王室成员住在这里。|历史文化|G
+former|adj.|以前的；前任的|过去曾经是的。|He is a former president.|他是前总统。|学术常用|G
+vote|v.|投票|通过选择来表达意见。|She was voted the most beautiful.|她被投票选为最美的人。|日常|G
+philanthropy|n.|慈善|捐钱帮助别人的行为。|She is known for philanthropy.|她以慈善闻名。|历史文化|G
+philanthropic|adj.|慈善的|乐于捐钱帮助别人的。|She does philanthropic work.|她做慈善工作。|历史文化|G
+charitable|adj.|慈善的；宽厚的|帮助穷人的，或对人宽容的。|She gave to a charitable cause.|她向慈善事业捐了款。|情绪性格|G
+despite|prep.|尽管|虽然有……，但还是。|Despite the rain, we went out.|尽管下雨，我们还是出去了。|表达|G
+depict|v.|描绘；描述|用图画或文字表现。|The painting depicts a queen.|这幅画描绘了一位王后。|历史文化|G
+pharaoh|n.|法老|古埃及的国王。|The pharaoh ruled Egypt.|法老统治着埃及。|历史文化|G
+extremely|adv.|极其|非常非常。|She is extremely beautiful.|她非常美丽。|学术常用|G
+profile|n.|简介；知名度|对人的简短介绍，也指公众形象。|She has a high public profile.|她的社会知名度很高。|日常|G
+previous|adj.|以前的|在这之前的。|I read it in the previous chapter.|我在上一章读过。|学术常用|G
+chief|n./adj.|首领；主要的|领导者，或最重要的。|He is the chief of the tribe.|他是部落首领。|历史文化|G
+relegate|v.|降级；贬低|把人放到较低的位置。|Women were relegated to a lower status.|女性被降到较低的地位。|历史文化|G
+subservient|adj.|屈从的；顺从的|总是听从别人、地位较低的。|She refused to be subservient.|她拒绝顺从。|情绪性格|G
+status|n.|地位；状态|一个人在社会中的位置。|Women had a low status.|女性地位很低。|历史文化|G
+carve|v.|雕刻|用刀在木头或石头上刻。|Her face was carved in stone.|她的脸被刻在石头上。|历史文化|G
+ceremonial|adj.|仪式的；礼仪上的|用于正式典礼的。|It was a ceremonial role.|那是一个礼仪性的职位。|历史文化|G
+battle|n.|战斗；战役|军队之间的战争。|He died in battle.|他死于战斗。|历史文化|G
+tomb|n.|坟墓|埋葬死人的地方。|They found the pharaoh's tomb.|他们发现了法老的坟墓。|历史文化|G
+arguably|adv.|可以说|有理由这样说（但别人可能不同意）。|She is arguably the best singer.|她可以说是最好的歌手。|表达|G
+handicapped|adj.|有残疾的|身体或智力有障碍的（比较旧的说法）。|He was physically handicapped.|他身体有残疾。|健康医学|G
+suffer|v.|遭受；受苦|经历痛苦或疾病。|He suffered from a disease.|他患有一种疾病。|健康医学|G
+deformity|n.|畸形|身体某部分形状不正常。|He was born with a deformity.|他天生有畸形。|健康医学|G
+vision|n.|视力；远见|看东西的能力，或对未来的想法。|He has poor vision.|他视力不好。|健康医学|G
+remarkably|adv.|非常；出奇地|令人惊讶地。|She is remarkably calm.|她出奇地平静。|学术常用|G
+in charge of|短语|负责；掌管|负责管理某人或某事。|She is in charge of the team.|她负责这个团队。|表达|G
+sickly|adj.|多病的；病弱的|经常生病、身体弱的。|He was a sickly child.|他小时候体弱多病。|健康医学|G
+dramatic|adj.|巨大的；戏剧性的|变化很大、很突然的。|There was a dramatic change.|发生了巨大的变化。|学术常用|G
+considerable|adj.|相当大的|数量或程度很大的。|It costs a considerable amount.|这花了相当多的钱。|学术常用|G
+religious|adj.|宗教的|和宗教信仰有关的。|It is a religious festival.|这是一个宗教节日。|历史文化|G
+polytheistic|adj.|多神教的|相信很多神的。|Ancient Egypt was polytheistic.|古埃及信奉多神。|历史文化|G
+henotheistic|adj.|单一主神教的|崇拜一个主神，但承认其他神存在。|The religion was henotheistic.|这种宗教是单一主神教。|历史文化|G
+monotheistic|adj.|一神教的|只相信一个神的。|It is a monotheistic religion.|这是一神教。|历史文化|G
+revere|v.|崇敬；尊敬|非常尊重、敬佩。|People revered the pharaoh.|人们崇敬法老。|历史文化|G
+disk|n.|圆盘|扁平的圆形物体。|The sun god was shown as a disk.|太阳神被画成一个圆盘。|物品|G
+deny|v.|否认；拒绝|说某事不是真的，或不给。|He denied the story.|他否认了这个说法。|学术常用|G
+subject|n.|主题；对象|被讨论或研究的东西。|She was the subject of many paintings.|她是很多画作的主题。|学术常用|G
+worship|v./n.|崇拜；礼拜|敬拜神灵。|They worshipped the sun.|他们崇拜太阳。|历史文化|G
+trace|n./v.|痕迹；追踪|留下的一点点迹象。|There is no trace of him.|他踪影全无。|学术常用|G
+adversary|n.|对手；敌人|和你竞争或对抗的人。|He defeated his adversaries.|他打败了对手。|历史文化|G
+remind|v.|提醒|让人想起某事。|Remind me to call her.|提醒我给她打电话。|日常|G
+throughout|prep.|遍及；自始至终|在整个地方或整段时间里。|It rained throughout the day.|雨下了一整天。|表达|G
+dispel|v.|驱散；消除|让错误的想法或担心消失。|She dispelled the rumours.|她澄清了谣言。|学术常用|G
+misconception|n.|误解|错误的看法。|It is a common misconception.|这是一个常见的误解。|学术常用|G
+aim|n./v.|目标；旨在|想要达到的结果。|Our aim is to help children.|我们的目标是帮助孩子。|学术常用|G
+exhibit|v./n.|展示；展品|在博物馆里展出。|The museum exhibits ancient art.|博物馆展出古代艺术。|历史文化|G
+intestine|n.|肠|消化食物的器官。|Food passes through the intestine.|食物经过肠道。|健康医学|G
+virtual|adj.|虚拟的|在电脑或网络上，而不是真实存在的。|We had a virtual meeting.|我们开了线上会议。|科技交通|G
+initiative|n.|倡议；主动性|新的计划，或主动做事的能力。|She launched a health initiative.|她发起了一项健康倡议。|学术常用|G
+currently|adv.|目前|现在这个时候。|She is currently in Beijing.|她目前在北京。|学术常用|G
+quote|v.|引用|重复别人说过的话。|He was quoted in the newspaper.|报纸引用了他的话。|学术常用|G
+consequently|adv.|因此|所以，结果是。|He was ill; consequently, he missed class.|他病了，因此没去上课。|表达|G
+financial|adj.|金融的；财务的|和钱有关的。|She has financial problems.|她有财务问题。|商业|G
+services|n.|服务|为人们提供的帮助或工作。|The bank offers financial services.|银行提供金融服务。|商业|G
+assets|n.|资产|一个人或公司拥有的有价值的东西。|The company has huge assets.|这家公司资产雄厚。|商业|G
+standard|n.|标准|衡量好坏的水平。|The food is of a high standard.|食物的水准很高。|学术常用|G
+stagger|v.|使震惊；摇晃|让人非常吃惊，或走路不稳。|The cost staggered everyone.|费用让所有人震惊。|情绪性格|G
+engage|v.|参与；吸引|加入某项活动。|She engages in charity work.|她参与慈善工作。|学术常用|G
+dialogue|n.|对话|两人或多方之间的交谈。|We need an open dialogue.|我们需要坦诚的对话。|日常|G
+tolerance|n.|宽容；容忍|接受和你不同的人或想法。|Tolerance is important.|宽容很重要。|情绪性格|G
+enormous|adj.|巨大的|非常大的。|It was an enormous success.|这是巨大的成功。|学术常用|G
+RNA molecule|n.|RNA 分子|从 DNA 复制基因信息、带在细胞里的分子。|RNA molecules show which genes are active.|RNA 分子显示哪些基因在活跃。|科学|H
+mitochondria|n.|线粒体|细胞中负责产生能量的部分。|Mitochondria produce energy.|线粒体产生能量。|科学|H
+enzyme|n.|酶|能加快化学反应的蛋白质。|Enzymes break down RNA.|酶会分解 RNA。|科学|H
+gene expression|n.|基因表达|基因被激活并制造出产物的过程。|Gene expression changes under stress.|压力下基因表达会改变。|科学|H
+stress granule|n.|应激颗粒|细胞受压力时形成的 RNA 聚集物。|Stress granules form during infection.|感染时会形成应激颗粒。|科学|H
+archive|v.|存档；归档|把东西保存起来，以后可以再查看。|The cell can archive its RNA.|细胞可以把 RNA 存档。|科学|H
+transient|adj.|短暂的|只持续很短一段时间。|It is a transient response.|这是一种短暂的反应。|科学|H
+snapshot|n.|快照；瞬间状态|某一刻的状态记录。|The test only gives a snapshot.|这个测试只能给出一张快照。|学术常用|H
+chemotherapy|n.|化疗|用强效药物杀死癌细胞的治疗方法。|Some cells survive chemotherapy.|有些细胞能在化疗后存活。|健康医学|H
+recurrence|n.|复发|疾病治疗后又再次出现。|Doctors want to prevent recurrence.|医生希望防止复发。|健康医学|H
+persister cell|n.|持留细胞|能在治疗中存活、之后可能让疾病复发的细胞。|Persister cells are hard to study.|持留细胞很难研究。|健康医学|H
+immune response|n.|免疫反应|免疫系统对有害物质做出的反应。|The immune response is fast.|免疫反应很快。|健康医学|H
+in retrospect|短语|回想起来；事后看来|回头看过去发生的事情。|In retrospect, it was a good choice.|回想起来，那是个好选择。|表达|H
+wallet|n.|钱包|装钱和各种卡的小包。|He lost his wallet on the way.|他在路上丢了钱包。|物品|I
+handkerchief|n.|手帕|用来擦汗或擦鼻子的小方布。|He took out his handkerchief.|他拿出了手帕。|物品|I
+ID card|n.|身份证|证明你是谁的卡片。|His ID card was in the wallet.|他的身份证在钱包里。|物品|I
+library card|n.|借书证|在图书馆借书时用的卡。|I forgot my library card.|我忘带借书证了。|物品|I
+security camera|n.|监控摄像头|拍摄并记录某个地方情况的摄像设备。|There is a security camera at the door.|门口有一个监控摄像头。|物品|I
+footage|n.|录像片段|摄像机拍下来的影像内容。|They watched the security footage.|他们看了监控录像。|物品|I
+commotion|n.|骚动；喧闹|人群中突然出现的吵闹或混乱。|There was a commotion near the entrance.|入口附近一阵骚动。|日常|I
+mutter|v.|嘀咕；喃喃自语|低声、含糊地自己说话。|He kept muttering to himself.|他一直在自言自语。|情绪性格|I
+retrace|v.|沿原路回溯|把走过的路重新走一遍，去找东西。|They retraced his steps.|他们沿着他走过的路重新找了一遍。|学术常用|I
+capture|v.|拍下；捕捉|用相机或录像记录下某个瞬间。|The camera captured the moment.|摄像头拍下了那一刻。|学术常用|I
+refuse|v.|拒绝；不肯|不同意去做某事。|She refused to give up.|她不肯放弃。|学术常用|I
+report|v.|报告；报案|把事情告诉相关的人，比如警察。|She reported it to the police.|她向警方报了案。|日常|I
+worried|adj.|担心的|害怕出问题而心里不安。|He was extremely worried.|他非常担心。|情绪性格|I
+shocked|adj.|震惊的|因为意外的事情而非常吃惊。|They were shocked by the video.|他们被录像震惊了。|情绪性格|I
+disappointed|adj.|失望的|事情没有如愿而不开心。|I was disappointed with the result.|我对结果很失望。|情绪性格|I
+excited|adj.|激动的；兴奋的|因为好事而情绪高涨。|He was very excited to get it back.|拿回来时他非常激动。|情绪性格|I
+kind-hearted|adj.|善良的；好心的|心地好、乐于帮助别人。|She is a kind-hearted girl.|她是个善良的女孩。|情绪性格|I
+cooperative|adj.|乐于配合的|愿意帮忙、积极配合别人。|The librarian was very cooperative.|图书管理员非常配合。|情绪性格|I
+library|n.|图书馆|可以看书、借书的地方。|She was on her way to the library.|她正在去图书馆的路上。|地点|I
+entrance|n.|入口|进入一个地方的门口。|Meet me at the entrance.|在入口等我。|地点|I
+police station|n.|警察局|警察工作、接受报案的地方。|Where is the nearest police station?|最近的警察局在哪里？|地点|I
+bushes|n.|灌木丛|一丛丛矮小的植物。|They searched the nearby bushes.|他们在附近的灌木丛里找。|地点|I
+without hesitation|短语|毫不犹豫地|表示某人马上做出决定或行动。|Without hesitation, Lily went to help.|Lily 毫不犹豫地去帮忙了。|表达|I
+sure enough|短语|果然|结果正好证明了之前的猜测。|Sure enough, the video showed the truth.|果然，录像显示了真相。|表达|I
+to make matters worse|短语|更糟糕的是|补充一个让情况变得更坏的信息。|To make matters worse, it started to rain.|更糟的是，天开始下雨了。|表达|I
+upon hearing this|短语|一听到这个|写人物听到某件事后立刻的反应。|Upon hearing this, he smiled.|一听到这个，他笑了。|表达|I
+a wave of relief washed over me|句子|我松了一口气|突然放下心来、不再紧张的感觉。|A wave of relief washed over me when I found my keys.|找到钥匙时，我松了一口气。|表达|I
+overwhelmed with gratitude|短语|满怀感激|因为非常感谢而情绪激动。|Overwhelmed with gratitude, he thanked her again.|他满怀感激，再次向她道谢。|表达|I
+in a hurry|短语|匆忙地|因为急着做某事而很快地行动。|He walked away in a hurry.|他匆匆忙忙地走了。|表达|I
+ingredient|n.|食材；原料|做饭时用到的各种材料。|Tomatoes are the main ingredient.|番茄是主要食材。|食物|J
+dessert|n.|甜点|饭后吃的甜食。|Let's have dessert after dinner.|晚饭后吃点甜点吧。|食物|J
+spicy|adj.|辣的|有辣椒的味道，吃起来辣辣的。|Sichuan food is very spicy.|川菜很辣。|食物|J
+leftovers|n.|剩菜；剩饭|上一顿没吃完留下来的食物。|I'll eat the leftovers for lunch.|我午饭吃剩菜。|食物|J
+takeout|n.|外卖|从餐厅买走或送到家里的饭菜。|Let's order takeout tonight.|今晚点外卖吧。|食物|J
+snack|n.|零食；小吃|两顿饭之间吃的少量食物。|I always bring a snack to class.|我总是带零食去上课。|食物|J
+groceries|n.|杂货；日用食品|家里日常需要买的食物和用品。|I need to buy some groceries.|我需要买一些日用品。|食物|J
+receipt|n.|收据；小票|付款后证明你买过东西的凭证。|Can I have the receipt, please?|请给我收据好吗？|物品|J
+appointment|n.|预约|事先约好的见面或服务时间。|I have an appointment at 3 p.m.|我下午三点有个预约。|日常|J
+reschedule|v.|改期|把原定的时间换成另一个时间。|Can we reschedule to Friday?|我们可以改到周五吗？|日常|J
+cancel|v.|取消|不再进行原定的计划或订单。|I need to cancel my order.|我需要取消订单。|日常|J
+reminder|n.|提醒|让你不要忘记某件事的通知。|Set a reminder for tomorrow.|设置明天的提醒。|日常|J
+available|adj.|有空的；可用的|有时间参加，或者可以使用。|Are you available tonight?|你今晚有空吗？|日常|J
+convenient|adj.|方便的|不费事，适合你的时间或需要。|Is 5 p.m. convenient for you?|下午五点你方便吗？|日常|J
+delay|n./v.|延误；推迟|比原定时间晚发生或晚到。|The train has a delay.|火车晚点了。|日常|J
+delivery|n.|送货；快递|把包裹或商品送到你手上。|My delivery arrives tomorrow.|我的快递明天到。|日常|J
+weekend|n.|周末|一周中休息的两天，通常是周六和周日。|What are you doing this weekend?|你这个周末做什么？|日常|J
+on time|短语|准时|在约定的时间到达或完成。|Please be on time for class.|上课请准时。|表达|J`;
+const WORDS = RAW.split("\n").filter(Boolean).map(line => {
+  const [en,pos,zh,def,ex,exzh,cat,src] = line.split("|");
+  return {en,pos,zh,def,ex,exzh,cat,src,groups:posGroups(pos)};
+});
+
+const tabsEl = document.getElementById('tabs');
+const chipsEl = document.getElementById('chips');
+const srcEl = document.getElementById('srcsel');
+const listEl = document.getElementById('entries');
+const countEl = document.getElementById('count');
+const searchEl = document.getElementById('search');
+const canSpeak = 'speechSynthesis' in window;
+let curCat = "全部", curPos = "全部";
+
+function say(text){
+  try{
+    const u = new SpeechSynthesisUtterance(text.replace(/\(.*?\)/g,''));
+    u.lang = 'en-US'; u.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function buildTabs(){
+  tabsEl.innerHTML = '';
+  const all = [["全部",{icon:"📒",color:"#fff3b0"}], ...Object.entries(CATS)];
+  all.forEach(([name,c]) => {
+    const n = name === "全部" ? WORDS.length : WORDS.filter(w => w.cat === name).length;
+    if (!n) return;
+    const b = document.createElement('button');
+    b.className = 'tab' + (name === curCat ? ' on' : '');
+    b.style.background = c.color;
+    b.innerHTML = c.icon + ' ' + name + '<span class="n">' + n + '</span>';
+    b.addEventListener('click', () => { curCat = name; buildTabs(); render(); });
+    tabsEl.appendChild(b);
+  });
+}
+
+function buildChips(){
+  chipsEl.innerHTML = '';
+  POS.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (p === curPos ? ' on' : '');
+    b.textContent = p;
+    b.addEventListener('click', () => { curPos = p; buildChips(); render(); });
+    chipsEl.appendChild(b);
+  });
+}
+
+function buildSources(){
+  const opt = (v,t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; srcEl.appendChild(o); };
+  opt("", "全部来源");
+  Object.entries(SOURCES).forEach(([k,v]) => {
+    const n = WORDS.filter(w => w.src === k).length;
+    if (n) opt(k, v + "（" + n + "）");
+  });
+  srcEl.addEventListener('change', render);
+}
+
+function render(){
+  const q = searchEl.value.trim().toLowerCase();
+  const s = srcEl.value;
+  const list = WORDS
+    .filter(w => curCat === "全部" || w.cat === curCat)
+    .filter(w => curPos === "全部" || w.groups.includes(curPos))
+    .filter(w => !s || w.src === s)
+    .filter(w => !q || (w.en + w.zh + w.def + w.ex).toLowerCase().includes(q));
+
+  countEl.textContent = '共 ' + list.length + ' 个';
+  listEl.innerHTML = '';
+
+  if (!list.length){
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = '没有找到这个单词 🦋';
+    listEl.appendChild(e);
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  list.forEach(w => {
+    const el = document.createElement('div');
+    el.className = 'entry';
+    el.innerHTML =
+      '<div class="top"><span class="en"></span><span class="pos"></span>' +
+      (canSpeak ? '<button class="say" title="听发音">🔊</button>' : '') +
+      '<span class="tag"></span></div>' +
+      '<div class="zh"></div><div class="def"></div>' +
+      '<div class="ex"><span class="exen"></span> <span class="exzh"></span></div>' +
+      '<div class="src"></div>';
+    el.querySelector('.en').textContent = w.en;
+    el.querySelector('.pos').textContent = w.pos;
+    const c = CATS[w.cat] || {icon:"📝",color:"#eee"};
+    const tag = el.querySelector('.tag');
+    tag.textContent = c.icon + ' ' + w.cat;
+    tag.style.background = c.color;
+    el.querySelector('.zh').textContent = w.zh;
+    el.querySelector('.def').textContent = w.def;
+    el.querySelector('.exen').textContent = '✏️ ' + w.ex;
+    el.querySelector('.exzh').textContent = '（' + w.exzh + '）';
+    el.querySelector('.src').textContent = '📖 ' + (SOURCES[w.src] || '');
+    const btn = el.querySelector('.say');
+    if (btn) btn.addEventListener('click', () => say(w.en));
+    frag.appendChild(el);
+  });
+  listEl.appendChild(frag);
+}
+
+searchEl.addEventListener('input', render);
+buildTabs(); buildChips(); buildSources(); render();
+</script>
+</body>
+</html>
